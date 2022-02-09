@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-require('ts-node').register()
 
 import meow from 'meow';
 import chokidar from 'chokidar';
@@ -10,8 +9,8 @@ const { resolve, join } = require('path');
 const { readdir, writeFile } = require('fs').promises;
 const { ensureFile } = require('fs-extra');
 
-const projectRoot = process.env.REMIX_ROOT || require("app-root-path")
-const remixConfig = require(`${projectRoot}/remix.config`)
+const projectRoot = process.env.REMIX_ROOT || process.cwd()
+const remixConfig = require(`${projectRoot}/remix.config.js`)
 
 // ensure remixConfig is available at the project root dir
 if(!remixConfig) {
@@ -26,7 +25,7 @@ Usage
 $ remix-generate-css-links
 Options
 --watch, -w  Watch for routes changes
---outdir -o Provide app/<output directory name> for directory to output links files (default ${OUTDIR})
+--outdir -o Provide <remix's appDirectory>/<output directory name> for directory to output links files (default ${OUTDIR})
 `;
 
 const cli = meow(helpText, {
@@ -90,7 +89,7 @@ export const mergeOtherLinks = (_links: HtmlLinkDescriptor[]) => {
 }
 `;
   
-  const generatedFileTarget = `app/${OUTDIR}/${filepath.split(".").slice(0,-1).join(".")}.generated-links.ts`
+  const generatedFileTarget = `${appdir}/${OUTDIR}/${filepath.split(".").slice(0,-1).join(".")}.generated-links.ts`
   await ensureFile(generatedFileTarget);
   await writeFile(generatedFileTarget, data);
 }
@@ -122,7 +121,7 @@ const debounce = (callback: Function, wait: number) => {
 }
 
 const build = async () => {
-  const appRootfilename = require.resolve(resolve(appdir, "root")).substring(appdirLength+1)
+  const appRootfilename = require.resolve(resolve(appdir, "root.tsx")).substring(appdirLength+1)
   await allStyleLinksInOneFile(appRootfilename)
   await processFileTree(`${appdir}/routes`)
 }
@@ -131,12 +130,12 @@ const debouncedBuild = debounce(build, 200)
 
 function watch() {
   debouncedBuild();
-  const projectRoutes = join(`${projectRoot}`, 'app/routes/**/*.{js,jsx,ts,tsx}')
+  const projectRoutes = join(appdir, 'routes/**/*.{js,jsx,ts,tsx}')
   const projectConfig = join(`${projectRoot}`, 'remix.config.js')
   chokidar.watch([projectRoutes, projectConfig]).on('change', () => {
       debouncedBuild();
   });
-  console.log('Watching for changes in your app routes...');
+  console.log(`Watching for changes in your app routes...`);
 }
 
 if (require.main === module) {

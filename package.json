@@ -14,8 +14,7 @@
   "scripts": {
     "watch": "tsc --watch",
     "prebuild": "rm -rf lib",
-    "build": "tsc",
-    "prepack": "npm run build",
+    "build": "tsup cli.ts -d lib",
     "test": "echo \"Error: no test specified\" && exit 1",
     "semantic-release": "semantic-release"
   },
@@ -45,8 +44,8 @@
   },
   "devDependencies": {
     "@types/node": "^17.0.15",
-    "typescript": "^4.5.5",
     "concurrently": "^6.x",
-    "ts-node": "^10.4.0"
+    "tsup": "^5.11.13",
+    "typescript": "^4.5.5"
   }
 }
